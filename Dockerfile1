@@ -1,0 +1,40 @@
+FROM python:3.8-slim-buster
+
+ENV SPARK_VERSION=2.3.1
+ENV HADOOP_VERSION=2.7
+
+WORKDIR /app
+
+COPY Pipfile* /app/
+
+## NOTE - rhel enforces user container permissions stronger ##
+USER root
+
+RUN pip install --upgrade pip \
+  && pip install --upgrade pipenv \
+  && pipenv install --system --deploy
+
+RUN wget https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \
+      && tar -xvzf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \
+      && mv spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} spark \
+      && rm spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \
+      && cd /
+
+RUN apt-get update && \
+    apt-get install -y curl \
+    wget \
+    openjdk-8-jdk
+
+USER 1001
+
+ENV PYSPARK_SUBMIT_ARGS = "--master local[2] pyspark-shell"
+ENV JAVA_HOME = /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+ENV SPARK_HOME = /app/spark/bin
+ENV PATH = "${PATH}:${JAVA_HOME}:${SPARK_HOME}"
+ENV JAVA_HOME "/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.252.b09-2.el8_1.x86_64/jre/bin/java"
+ENV SPARK_HOME "/app/spark"
+ENV PATH "${PATH}:${JAVA_HOME}:${SPARK_HOME}"
+
+
+COPY . /app
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "--env", "DJANGO_SETTINGS_MODULE=pythondjangoapp.settings.development", "pythondjangoapp.wsgi", "--timeout 120"]

@@ -1,0 +1,15 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg navbar-light" style="background-color: #00ccff;">
+    <ul class="navbar-nav mr-auto" style="color:red">
+        <li class="nav-item active">
+            <a class="nav-link" href="/tweets/{{name}}" style="color:#9900cc;font-size:20px;font-weight: bold">View Twitter Data</a>
+        </li>
+        <li class="nav-item active">
+            <a class="nav-link" href="/dashboard/{{name}}" style="color:#9900cc;font-size:20px;font-weight: bold">Configure Locations</a>
+        </li>
+        <li class="nav-item active">
+            <a class="nav-link" href="/help/{{name}}" style="color:#9900cc;font-size:20px;font-weight: bold">Help</a>
+        </li>
+    </ul>
+</nav>
+<script type="text/javascript" src="{% static 'js/utils.js' %}"></script>

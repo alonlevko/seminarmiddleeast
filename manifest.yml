@@ -1,0 +1,11 @@
+---
+applications:
+- instances: 1
+  timeout: 180
+  buildpack: https://github.com/cloudfoundry/python-buildpack
+  name: seminarmiddleeast
+  command: gunicorn --env DJANGO_SETTINGS_MODULE=pythondjangoapp.settings.development pythondjangoapp.wsgi -b 0.0.0.0:$PORT --timeout 0
+  disk_quota: 2GB
+  memory: 1988MB
+  domain: eu-gb.mybluemix.net
+  host: SeminaMiddleEastTwitter

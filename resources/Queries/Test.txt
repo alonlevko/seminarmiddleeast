@@ -1,0 +1,7 @@
+select word from words union select words from stop_words
+_id,value
+
+
+
+
+This query returns the most popular word in every day

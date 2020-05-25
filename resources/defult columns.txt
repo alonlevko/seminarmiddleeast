@@ -1,0 +1,5 @@
+followers_count null    str
+total_retweet_count null    str
+total_favorite_count null    str
+total_replies_count null    str
+total_quoted_count null    str

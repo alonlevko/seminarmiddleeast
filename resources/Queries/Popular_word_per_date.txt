@@ -1,0 +1,7 @@
+select distinct date,counter,max(word) over (partition by date) as popular_word from (select date,word,counter,max(counter) over (partition by date) as max_counter from (select d.date,b.word,count(a.id) as counter from (select id from tweets) as a join (select id,word from words where word not in (select words from stop_words)) as b on a.id = b.id join (select id,date from dates) as d on a.id = d.id group by date,word order by count(a.id) desc) as d) where counter = max_counter order by date asc
+_id,value,region_name,place_name,user_name
+
+
+
+
+This query returns the most popular word in every day

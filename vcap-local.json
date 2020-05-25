@@ -1,0 +1,33 @@
+{
+  "cloudantNoSQLDB": [
+    {
+      "label": "cloudantNoSQLDB",
+      "provider": null,
+      "plan": "Lite",
+      "name": "seminar-middle-east-cloudant-1580739356115",
+      "tags": [
+        "data_management",
+        "ibm_created",
+        "lite",
+        "ibm_dedicated_public",
+        "ibmcloud-alias"
+      ],
+      "instance_name": "seminar-middle-east-cloudant-1580739356115",
+      "binding_name": null,
+      "credentials": {
+        "apikey": "xLrtyK9O8BT6D66EdDAav_ZTKpeSEuse7dqW8ogzm8g2",
+        "host": "7128478b-2062-4009-9051-186404f4ac8b-bluemix.cloudantnosqldb.appdomain.cloud",
+        "iam_apikey_description": "Auto-generated for binding 3808bee6-05c7-4938-a7c1-583d2e501cad",
+        "iam_apikey_name": "seminar-middle-east-cloudant-1580739356115",
+        "iam_role_crn": "crn:v1:bluemix:public:iam::::serviceRole:Manager",
+        "iam_serviceid_crn": "crn:v1:bluemix:public:iam-identity::a/1706a8ced5fc4a7ab2784acc4253fbbe::serviceid:ServiceId-f859e6ad-4800-46bf-8b43-ed2698681394",
+        "password": "786002d3934d952c603f32df1c65be0f5bdd15806211159e71c3bbdfba50fdbd",
+        "port": 443,
+        "url": "https://7128478b-2062-4009-9051-186404f4ac8b-bluemix:786002d3934d952c603f32df1c65be0f5bdd15806211159e71c3bbdfba50fdbd@7128478b-2062-4009-9051-186404f4ac8b-bluemix.cloudantnosqldb.appdomain.cloud",
+        "username": "7128478b-2062-4009-9051-186404f4ac8b-bluemix"
+      },
+      "syslog_drain_url": null,
+      "volume_mounts": []
+    }
+  ]
+}

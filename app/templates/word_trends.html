@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <title>Word Trends</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+    <div id="navbar-holder">{% include "navbar.html" with name=user %}</div>
+    <p id="user" hidden="hidden">{{user}}</p>
+    <div style="padding-left: 50px;">
+        <div style="float: left;width: 33%;padding: 10px;">
+        {% include "placeListGen.html" %}
+        </div>
+        <div style="float: left;width: 33%;padding: 10px; margin-bottom:100px">
+        {% include "datesInput.html" %}
+        </div>
+        <div style="float: left;width: 33%;padding: 10px; margin-bottom:100px">
+        {% include "wordBankGen.html" %}
+        </div>
+        <div align="center">
+            <button id="show_trends" onclick="showTrends()">Show Trends</button>
+        </div>
+        <div align="center" id="trends_div"></div>
+    </div>
+</body>
+{% include "basicScripts.html" %}
+<script type="text/javascript" src="{% static 'js/word_trends.js' %}"></script>
+</html>

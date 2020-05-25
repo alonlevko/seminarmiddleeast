@@ -1,0 +1,7 @@
+select distinct phrase_param as phrase,b.id,b.text,b.user_id,u.screen_name,b.full_date,b.retweet_count,b.retweet_rnk from (select distinct a.id,a.text,a.user_id,a.full_date,a.retweet_count,rank() over (partition by a.count_id order by cast(retweet_count as float) desc) as retweet_rnk from (select t.id,t.text,t.user_id,d.full_date,t.retweet_count,count(t.id) over () as count_id from tweets t join (select id,full_date from dates) as d on t.id = d.id and t.text like '%' || phrase_param || '%') as a) as b join users u on b.user_id = u.id where retweet_rnk <= cast(threshold_param as float) order by retweet_rnk asc
+_id,value,user_name,place_name,region_name
+
+_id,user_name, place_name, region_name
+
+phrase_param,threshold_param
+This query returns the most popular word in every day

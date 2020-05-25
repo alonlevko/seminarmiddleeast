@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html style="background-color: #f8f6f8;">
+
+<head>
+    <title>Twitter Mania</title>
+</head>
+
+<body>
+    <h1 id="head" align="Center"> Login:</h1>
+    <div>
+        <form action="/your-name/" method="post" align="Center">
+            {% csrf_token %}
+            {{ form }}
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+</body>
+</html>

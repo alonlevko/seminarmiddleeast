@@ -1,0 +1,19 @@
+.slider_label {
+    width:10%;
+    float: left;
+    font-size:20px;
+    font-weight: bold;
+}
+
+.slider {
+    width:80%;
+    float: left;
+    margin-right: 30px;
+    margin-bottom: 50px;
+}
+
+.slider_button {
+    width:10%
+    float: left;
+    margin-bottom: 50px;
+}

@@ -1,0 +1,26 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+gunicorn = "*"
+whitenoise = "==5.0"
+ibmcloudenv = "*"
+livereload = "*"
+Django = ">=2.2.8"
+python-twitter = "*"
+djangorestframework = "*"
+cloudant = "*"
+jsonpickle = "*"
+searchtweets = "*"
+python-dateutil = "*"
+ibm-cloud-sdk-core = "*"
+ibm-watson = "*"
+pandas = "*"
+numpy = "*"
+sqlalchemy = "*"
+nltk = "*"
+pysqlite3 = "*"

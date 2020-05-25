@@ -1,0 +1,7 @@
+select distinct c.id,c.text,c.user_id,u.screen_name,c.full_date,c.time_rnk from (select distinct b.id,b.text,b.user_id,b.full_date,b.time_rnk from (select a.id,a.text,a.user_id,a.full_date,rank() over (partition by a.count_id order by a.full_date asc) as time_rnk from (select t.id,t.text,t.user_id,d.full_date,count(t.id) over () as count_id from tweets t join (select id,full_date from dates) as d on t.id = d.id and t.text like '%' || phrase_param || '%') as a) as b where time_rnk <= cast(threshold_param as float)) as c join users u on c.user_id = u.id order by time_rnk asc
+_id,value
+
+
+
+phrase_param,threshold_param
+This query returns the most popular word in every day

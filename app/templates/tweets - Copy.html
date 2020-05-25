@@ -1,0 +1,147 @@
+<!doctype html>
+{% load static %}
+<html lang="en" xmlns:float="http://www.w3.org/1999/xhtml" style="background-color: #f8f6f8;">
+<head>
+    <meta charset="UTF-8">
+    <title>Tweets</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/bootstrap-table@1.16.0/dist/extensions/filter-control/bootstrap-table-filter-control.css">
+    <link rel="stylesheet" href="{% static 'css/sameRow.css' %}">
+    <link rel="stylesheet" href="{% static 'css/placeListGen.css' %}">
+</head>
+
+<body style="background-color: #f8f6f8;">
+    <div id="navbar-holder">{% include "navbar.html" with name=user %}</div>
+    <br>
+    <p id="user" hidden="hidden">{{user}}</p>
+    <p id="region" hidden="hidden">{{region.get_name}}</p>
+    <p id="place" hidden="hidden">{{place.get_name}}</p>
+    <select class="selectpicker" title="Choose" multiple>
+              <option>Mustard</option>
+              <option>Ketchup</option>
+              <option>Barbecue</option>
+    </select>
+    <div style="display: grid; grid-row-gap: 20px;">
+        <div id="setting" style="display:inline-grid; grid-row: 1 / 2; grid-template-columns: 200px">
+            <div class="multiselect settingsRow" style="grid-column: 1 / 2;">
+                <div class="selectBox" onclick="showCheckboxes('checkboxesRegion')">
+                    <select id="region_list_select" name="region_list_select">
+                        <option>Select Regions</option>
+                    </select>
+                    <div class="overSelect"></div>
+                </div>
+                <div id="checkboxesRegion"></div>
+            </div>
+            <div class="multiselect settingsRow" style="grid-column: 2 / 3;">
+                <div class="selectBox" onclick="showCheckboxes('checkboxesPlace')">
+                    <select id="place_list_select" name="place_list_select">
+                        <option>Select Places</option>
+                    </select>
+                    <div class="overSelect"></div>
+                </div>
+                <div id="checkboxesPlace"></div>
+            </div>
+            <label class="settingsRow" for="start_date" style="grid-column: 3 / 4;">Start Date:</label>
+            <input type="date" id="start_date" name="start_date" style="grid-column: 4 / 5; width:160px">
+            <label class="settingsRow" for="end_date" style="grid-column: 5 / 6;">End Date:</label>
+            <input type="date" id="end_date" name="end_date" style="grid-column: 6 / 7; width:160px">
+            <div class="multiselect settingsRow" style="grid-column: 7 / 8;">
+                <div class="selectBox" onclick="showCheckboxes('checkboxesWords')">
+                    <select id="search_words_select" name="search_words_select">
+                        <option>Select Search words</option>
+                    </select>
+                    <div class="overSelect"></div>
+                </div>
+                <div id="checkboxesWords"></div>
+            </div>
+            <input style="grid-column: 8 / 9" type="text" id="word" name="word" placeholder="search word">
+            <input style="grid-column: 9 / 10" type="submit" value="Add" id="add_word" onclick="addWord()">
+            <input style="grid-column: 10 / 11" type="submit" value="Remove" id="remove_word" onclick="removeWord()">
+
+        </div>
+        <div id="actions" style="grid-row: 2 / 3">
+            <button class="actionRow" id="show_tweets" onclick="showTweets(this)">Show Tweets</button>
+            <button class="actionRow" id="show_Users" onclick="showUsers()">Show Users</button>
+            <button class="actionRow" id="show_quary">Twitter Origin</button>
+            <button class="actionRow" id="collect_tweets" onclick="collectTweets()">Collect Tweets</button>
+            <button class="actionRow" id="build_ai_charts" onclick="buildAICharts()">Build AI Charts</button>
+            <select class="actionRow" id="analytics">
+                <option value="prompt">Choose a Analysis:</option>
+                <!--<option value="Popular_word_per_date">Popular word per date</option>-->
+                <option value="Word_trend">Word trend</option>
+                <option value="Popularity_of_word_bank_per_place">Popularity of word bank per place</option>
+                <!--<option value="Popular_word_per_place">Popular word per place</option>-->
+                <option value="Opinion_Leaders">Opinion Leaders</option>
+                <!--<option value="First_Time">First Time</option>-->
+                <option value="Most_Retweeted">Most Retweeted</option>
+                <option value="Phrase_trend">Phrase trend</option>
+                <option value="Opinion_Leaders_by_phrase">Opinion Leaders by phrase</option>
+            </select>
+            <button class="actionRow" id="run_analytics" onclick="runAnalysis()">Run Analysis</button>
+        </div>
+    </div>
+    <div align="center" id="AIcharts"></div>
+    <div id="results"></div>
+    <div id="tweets_table">
+    <table id="ttable" class="table table-striped" data-toggle="table"
+               data-show-columns="true" data-show-export="true" data-search="true" data-advanced-search="true"
+               data-filter-control="true" data-pagination="true">
+            <thead>
+                <tr>
+                    <th data-field="id">ID</th>
+                    <th data-field="text">text</th>
+                    <th data-field="username" data-filter-control="select" >user screen name</th>
+                    <th data-field="userLocation" data-filter-control="select" >user location</th>
+                    <th data-field="coordinates">coordinates</th>
+                    <th data-field="placeName" data-filter-control="select" >place full name</th>
+                    <th data-field="created" data-filter-control="select" >created_at</th>
+                    <th data-field="category" data-filter-control="select">category</th>
+                    <th data-field="concept" data-filter-control="select">concept</th>
+                    <th data-field="entities" data-filter-control="select">entities</th>
+                    <th data-field="entities_sentiment" data-filter-control="select">entities sentiment</th>
+                    <th data-field="keywords" data-filter-control="select">keywords</th>
+                    <th data-field="keywords_sentiment" data-filter-control="select">keywords sentiment</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div id="users_table">
+        <table id="utable" class="table table-striped" style="width:100%" border="1" data-toggle="table" data-show-columns="true"
+          data-show-export="true" data-search="true" data-advanced-search="true" data-filter-control="true">
+        <thead>
+            <tr>
+                <th data-field="id">ID</th>
+                <th data-field="text">Description</th>
+                <th data-field="username">User screen name</th>
+                <th data-field="userLocation" data-filter-control="select" >User location</th>
+                <th data-field="coordinates">Name</th>
+                <th data-field="placeName" >Followers_count</th>
+                <th data-field="created" data-filter-control="select">Created_at</th>
+                <th data-field="total_retweet_count">Retweet Count</th>
+                <th data-field="total_favorites_count">Favorites Count</th>
+                <th data-field="total_replies_count">Replies Count</th>
+                <th data-field="total_quoted_count">Quoted Count</th>
+                <th data-field="verified" data-filter-control="select">Verified</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+        </table>
+    </div>
+</body>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+{% include "tableScripts.html" %}
+<script type="text/javascript" src="{% static 'js/tweets.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/analytics.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/placeListGen.js' %}"></script>
+
+
+</html>

@@ -1,0 +1,7 @@
+select distinct place_name,counter,max(word) over (partition by place_name) as popular_word from (select place_name,word,counter,max(counter) over (partition by place_name) as max_counter from (select c.place_name,b.word,count(a.id) as counter from (select id from tweets) as a join (select id,word from words where word not in (select words from stop_words) ) as b on a.id = b.id join (select _id,place_name from servies_new_tweet_db) as c on a.id = c._id join (select id,date from dates) as d on a.id = d.id group by place_name,word order by count(a.id) desc) as c) as d where counter = max_counter order by place_name asc
+_id,value,region_name,place_name,user_name
+
+user_name, place_name, region_name
+
+
+This query returns the most popular word in each of the places

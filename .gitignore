@@ -1,0 +1,11 @@
+
+.DS_Store
+*.pyc
+*.egg-info
+server/localdev-config.json
+credentials.json
+localdev-config.json
+server/localdev-config.json
+/clear_db.py
+/test_db.py
+/create_db.py

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" style="background-color: #f8f6f8;">
+<head>
+    <meta charset="UTF-8">
+    <title>DashBoard</title>
+    {% load static %}
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/bootstrap-table@1.16.0/dist/extensions/filter-control/bootstrap-table-filter-control.css">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body style="background-color: #f8f6f8;">
+    <div id="navbar-holder">{% include "navbar.html" with name=name %}</div>
+    <div>
+        <div class="tab">
+        {% for key, region in regions.items %}
+            <button class="tablinks" onclick="openCity(event, '{{key}}')">{{key}}</button>
+        {% endfor %}
+            <button class="tablinks" onclick="openCity(event, 'forms')">Add Location</button>
+        </div>
+        {% for key, region in regions.items %}
+        <div id="{{key}}" class="tabcontent">
+            <button onclick="removeRegion('{{key}}')" style="float: right">Delete {{key}}</button>
+            <table class="table table-striped" ID="placeTable" style="width:90%" border="1" data-toggle="table" data-show-columns="true" data-show-export="true" data-search="true" data-advanced-search="true">
+                <thead>
+                <tr>
+                    <th>name</th>
+                    <th>latitude</th>
+                    <th>longitude</th>
+                    <th>radius</th>
+                    <th>language</th>
+                    <th>tweets count</th>
+                    <th>users count</th>
+                    <th>last tweet date</th>
+                    <th>remove</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for keyp, place in region.get_places_handle.items %}
+                <tr>
+                    <td>{{place.get_name}}</td>
+                    <td>{{place.get_latitude}}</td>
+                    <td>{{place.get_longitude}}</td>
+                    <td>{{place.get_radius}}</td>
+                    <td>{{place.get_language}}</td>
+                    <td>{{place.get_tweet_number}}</td>
+                    <td>{{place.get_user_number}}</td>
+                    <td>{{place.last_tweet_date}}</td>
+                    <td><button onclick="removePlace('{{key}}', '{{place.get_name}}')">remove</button></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+        <div id="forms" class="tabcontent">
+        <form action="/dashboard/{{name}}" method="post">
+            {% csrf_token %}
+            {{ region_form }}
+            <input type="submit" value="Add region">
+        </form>
+        <br>
+        <form action="/dashboard/{{name}}" method="post">
+            {% csrf_token %}
+            {{ place_form }}
+            <input type="submit" value="Add place">
+        </form>
+        <br>
+        <form method="post" id="removeForm" style="visibility: hidden; height: 0">
+            {% csrf_token %}
+            {{ tweets_form }}
+            <input id="removePlaceSubmit" type="submit" formaction="/dashboard/{{name}}" value="Remove Place">
+        </form>
+    </div>
+    </div>
+</body>
+{% include "basicScripts.html" %}
+{% include "tableScripts.html" %}
+<script type="text/javascript" src="{% static 'js/dashboard.js' %}"></script>
+<script>
+    function countRows(button) {
+        if (button.innerHTML == "Count Places") {
+            var tbodyRowCount = document.getElementById("placeTable").tBodies[0].rows.length;
+            button.innerHTML = tbodyRowCount.toString();
+        } else {
+            button.innerHTML = "Count Places";
+        }
+    }
+</script>
+</html>

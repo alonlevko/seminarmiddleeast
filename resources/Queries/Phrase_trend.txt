@@ -1,0 +1,7 @@
+select phrase_param as phrase,d.date,count(a.id) as counter from (select id from tweets where text like '%' || phrase_param || '%') as a join (select id,date from dates) as d on a.id = d.id group by d.date order by d.date asc
+_id,value,region_name,place_name,user_name
+
+user_name, place_name, region_name
+
+phrase_param
+This query gets a bank of words and returns the trends of these word through an interval of time

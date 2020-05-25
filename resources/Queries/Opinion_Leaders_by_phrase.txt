@@ -1,0 +1,7 @@
+select distinct b.id,b.screen_name,b.followers_cnt,b.status_cnt,b.user_name,b.place_name,b.region_name from (select a.id,a.screen_name,a.followers_cnt,a.status_cnt,a.user_name, a.place_name,a.region_name,a.count_id,rank() over (partition by a.count_id order by a.followers_cnt desc) as follow_rnk,rank() over (partition by a.count_id order by a.status_cnt desc) as status_rnk from (select f.id,f.screen_name,f.followers_cnt,f.status_cnt, f.user_name, f.place_name, f.region_name,count(id) over () as count_id from (select g.id,g.screen_name,g.followers_cnt,g.status_cnt,s.user_name, s.place_name, s.region_name from (select u.id,u.screen_name,cast(u.followers_count as int) as followers_cnt, cast(u.statuses_count as int) as status_cnt from users u where id in (select user_id from tweets where text like '%' || phrase_param || '%')) as g join servies_new_twitter_users_db s on g.id = s._id and s.place_name in (place_param)) as f) as a) as b where b.follow_rnk between b.count_id*cast(follow_bottom_param as float) and b.count_id*cast(follow_top_param as float) and b.status_rnk between b.count_id*cast(status_bottom_param as float) and b.count_id*cast(status_top_param as float)
+_id,value,user_name, place_name, region_name
+
+_id,user_name, place_name, region_name
+
+phrase_param,place_param,follow_bottom_param,follow_top_param,status_bottom_param,status_top_param
+This query returns the most popular word in every day
