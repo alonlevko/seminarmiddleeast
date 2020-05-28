@@ -4,7 +4,6 @@ import sys
 import livereload
 import gunicorn
 import rest_framework.apps
-import chartjs
 import app
 import app.apps
 

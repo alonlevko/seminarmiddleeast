@@ -1,0 +1,17 @@
+gunicorn
+whitenoise==5.0
+ibmcloudenv
+livereload
+Django>=2.2.8
+python-twitter
+djangorestframework
+cloudant
+jsonpickle
+searchtweets
+python-dateutil
+ibm-cloud-sdk-core
+ibm-watson
+numpy
+pandas
+sqlalchemy
+nltk
