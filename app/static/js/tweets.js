@@ -16,6 +16,7 @@ function showTable(tableId) {
     document.getElementById(tableId).style.overflow = "visible";
 
 }
+
 window.addEventListener('load', (event) => {
 	document.getElementById("show_quary").onclick = loadQuarys;
 	hideTable("users_table");
@@ -151,38 +152,20 @@ function initTimer(prefix, button, whenToEnd) {
     }, 1000);
     return interval;
 }
+var tableIdList = ["tweets_table", "users_table", "origin_table", "most_retweeted_table", "first_time_table"];
+
+function showTableByIter(tableid) {
+    tableIdList.forEach(function(tablename) {
+        if (tablename == tableid) {
+            showTable(tablename);
+        } else {
+            hideTable(tablename);
+        }
+    });
+}
 
 function showTweets(button) {
-	var div = document.getElementById("results");
-	div.innerHTML = '';
-	show_quary_reload();
-	showTable("tweets_table");
-	hideTable("users_table");
-	hideTable("origin_table");
-	hideTable("most_retweeted_table");
-	hideTable("first_time_table");
-	var startDate = document.getElementById("start_date").value;
-	var endDate = document.getElementById("end_date").value;
-	var totalTweets = 0;
-	var interval;
-	var locations = buildSelectedLocations();
-	if (locations.length == 0) {
-	    return;
-	}
-	var word_list = getCheckedSearchWords();
-	locations.forEach(function(elem) {
-		$.ajax({
-			url: window.location.origin + "/tweets-get",
-			data: {
-				'user_name': document.getElementById("user").innerHTML,
-				'locations_list': JSON.stringify([elem]),
-				'start_date': startDate,
-			    'end_date': endDate,
-			    'words_list': JSON.stringify(word_list)
-			},
-			dataType: 'json',
-			method: 'post',
-			success: function (res, status) {
+    ajaxCall("/tweets-get", "tweets_table", function (res, status) {
 				var data = [];
 				$("#ttable").bootstrapTable('removeAll');
 				res.forEach(function (t) {
@@ -193,23 +176,8 @@ function showTweets(button) {
 				button.disabled = false;
 				button.innerHTML = "Inspect Tweets";
 				//clearInterval(interval);
-			},
-			error: function (res) {
-                error(res);
-                button.disabled = false;
-				button.innerHTML = "Inspect Tweets";
-                //clearInterval(interval);
-			}
-		});
-		totalTweets += (regions_places_dictionary[elem.region].find(element => element['name'] == elem.place))['tweets'];
-	});
-	button.disabled = true;
-	var prefix = "ETA";
-	//button.innerHTML = prefix;
-	//interval = initTimer(prefix, button, tweetNumToTime(totalTweets));
+			}, function(res) {});
 }
-
-var $utable = $('#utable');
 
 function parseUserSendaway(t) {
 	return {
@@ -228,46 +196,13 @@ function parseUserSendaway(t) {
 }
 
 function showUsers() {
-	var div = document.getElementById("results");
-	div.innerHTML = '';
-	$utable.bootstrapTable('removeAll');
-    var startDate = document.getElementById("start_date").value;
-	var endDate = document.getElementById("end_date").value;
-	show_quary_reload();
-	hideTable("tweets_table");
-	showTable("users_table");
-	hideTable("origin_table");
-	hideTable("most_retweeted_table");
-	hideTable("first_time_table");
-	var locations = buildSelectedLocations();
-	if (locations.length == 0) {
-	    return;
-	}
-	var word_list = getCheckedSearchWords();
-	locations.forEach(function(elem) {
-		$.ajax({
-			url: window.location.origin + "/users-get",
-			data: {
-				'user_name': document.getElementById("user").innerHTML,
-				'locations_list': JSON.stringify([elem]),
-				'start_date': startDate,
-			    'end_date': endDate,
-			    'words_list': JSON.stringify(word_list)
-			},
-			dataType: 'json',
-			method: 'post',
-			success: function (res, status) {
-				var data = [];
-				res.forEach(function (t) {
-					data.push(parseUserSendaway(t));
-				});
-				$utable.bootstrapTable('append', data)
-			},
-			error: function (res) {
-                error(res);
-			}
+    ajaxCall("/users-get", "users_table", function (res, status) {
+		var data = [];
+		res.forEach(function (t) {
+			data.push(parseUserSendaway(t));
 		});
-	});
+		$('#utable').bootstrapTable('append', data)
+    }, function(res) {});
 }
 
 function buildAICharts() {
@@ -298,40 +233,16 @@ function clearResults() {
 
 function loadQuarys() {
     var locations = buildSelectedLocations();
-    clearResults();
-    var button = document.getElementById("show_quary");
-	button.onclick = removeQuarys;
-	button.innerHTML = "Remove links";
-	hideTable("tweets_table");
-	hideTable("users_table");
-	showTable("origin_table");
-	$('#otable').bootstrapTable('removeAll');
-	if (locations.length == 0) {
-	    return;
-	}
-	$.ajax({
-		url: window.location.origin + "/get_query_links",
-		data: {
-			'user_name': document.getElementById("user").innerHTML,
-			'locations_list': JSON.stringify(locations),
-		},
-		dataType: 'json',
-		method: 'post',
-		success: function (res, status) {
-		    $('#otable').bootstrapTable('removeAll');
+    ajaxCall("/get_query_links", "origin_table", function (res, status) {
+		   $('#otable').bootstrapTable('removeAll');
 	       for (var i = 0; i < res.length; i++) {
-
 	            $('#otable').bootstrapTable('append', {
                     region: locations[i].region,
                     place: locations[i].place,
                     link: `<a target="_blank" href="https://twitter.com/search?q=` + res + `&src=typed_query">Link</a><br>`
                 });
 	       }
-		},
-		error: function (res) {
-            error(res);
-		}
-	});
+	}, function (res) {});
 }
 
 function show_quary_reload() {
@@ -367,24 +278,20 @@ function runAnalysis() {
                 showMostPopularWords();
                 break;
             case "Opinion_Leaders":
+                document.getElementById("results").innerHTML = '';
                 document.getElementById('populars_dialog').show()
                 break;
             case "First_Time":
+                document.getElementById("results").innerHTML = '';
                 document.getElementById('first_time_dialog').show()
                 break;
             case "Most_Retweeted":
+                document.getElementById("results").innerHTML = '';
                 document.getElementById('most_retweeted_dialog').show()
-                break;
-            case "Phrase_trend":
-                break;
-            case "Opinion_Leaders_by_phrase":
-                document.getElementById('populars_dialog').show()
                 break;
             case "prompt":
             default:
                 break;
     }
-
 }
-
 	

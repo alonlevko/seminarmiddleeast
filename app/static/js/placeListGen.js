@@ -75,15 +75,11 @@ function AddFromSelect() {
 }
 
 function buildLabelFromText(key, appendTo, addChangeFunc) {
-     // Append the option to select
-    //$('#myselect').append('<option value="'+newitemnum+'">'+newitemdesc+'</option>');
     $("#" + appendTo).append('<option value="'+key+'">'+key+'</option>');
-    // Refresh the selectpicker
     $("#" + appendTo).selectpicker("refresh");
 }
 function changeFunc(key) {
     var changedClickBox = document.getElementById(key.id);
-    //checkboxesPlace.innerHTML = "";
     if (changedClickBox.checked == true) {
         regions_places_dictionary[key.id].forEach(function(place_dict) {
             $("#place_list_select").append('<option value="'+place_dict['name'],+'">'+place_dict['name'],+'</option>');
@@ -146,10 +142,19 @@ function buildSelectedLocations() {
     return locations_list;
 }
 
+function openWordAdd() {
+    document.getElementById("add_word_dialog").show();
+    document.getElementById("plus_word").onclick = function () {
+        document.getElementById("add_word_dialog").close();
+        document.getElementById("plus_word").onclick = openWordAdd;
+    };
+}
+
 function addWord() {
     var word = document.getElementById('word').value;
     getAllWords("", word);
     document.getElementById('word').value = "";
+    document.getElementById("add_word_dialog").close();
 }
 
 function removeWord() {
@@ -158,7 +163,13 @@ function removeWord() {
     document.getElementById('word').value = "";
 }
 
+function removeSelectedWords() {
+    var words = getCheckedSearchWords();
+    getAllWords(words, "");
+}
+
 function getAllWords(toRemove, toAdd) {
+  document.body.style.cursor = 'wait';
   setTimeout(function() {
       $.ajax({
         url: window.location.origin + "/get_search_words",
@@ -170,14 +181,16 @@ function getAllWords(toRemove, toAdd) {
         dataType: 'json',
         method: 'post',
         success: function (res, status) {
+            document.body.style.cursor = 'default';
             words = res;
             updateWordsBox(words);
         },
         error: function (res) {
+            document.body.style.cursor = 'default';
             error(res);
         }
       });
-    }, 1000);
+    }, 200);
 }
 
 function updateWordsBox(words) {

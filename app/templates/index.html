@@ -1,17 +1,19 @@
 <!DOCTYPE html>
-<html style="background-color: #f8f6f8;">
+{% load static %}
+<html style="background-image: url('{% static 'images/background.jpg' %}');">
+<link rel="stylesheet" href="{% static 'css/tweets.css' %}">
 
 <head>
     <title>Twitter Mania</title>
 </head>
 
 <body>
-    <h1 id="head" align="Center"> Login:</h1>
+    <img style="display: block; margin-left: auto; margin-right: auto; width: 20%;" src="{% static 'images/easy.jpg' %}" alt="My image" width="30%" height="30%">
     <div>
-        <form action="/your-name/" method="post" align="Center">
+        <form action="/your-name/" method="post" align="Center" style="margin-top: 40px;">
             {% csrf_token %}
             {{ form }}
-            <input type="submit" value="Submit">
+            <input class="button" type="submit" value="Submit">
         </form>
     </div>
 </body>

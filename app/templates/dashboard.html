@@ -12,20 +12,26 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/bootstrap-table@1.16.0/dist/extensions/filter-control/bootstrap-table-filter-control.css">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{% static 'css/tweets.css' %}">
 </head>
 <body style="background-color: #f8f6f8;">
     <div id="navbar-holder">{% include "navbar.html" with name=name %}</div>
     <div>
-        <div class="tab">
+        <div class="tab" id="mytab">
         {% for key, region in regions.items %}
-            <button class="tablinks" onclick="openCity(event, '{{key}}')">{{key}}</button>
+            <button class="tablinks button" onclick="openCity(event, '{{key}}')">{{key}}</button>
         {% endfor %}
-            <button class="tablinks" onclick="openCity(event, 'forms')">Add Location</button>
+            <div id="addRegionTab">
+                <button id="addRegion" class="tablinks button" onclick="addRegionTab()">&#43;</button>
+                <input style="float: left" type="text" id="region" placeholder="regiom name">
+                <button style="float: left" class="button" id="arrow" onclick="submitRegionName()"><i style="float: left; display:inline-block;" id="arr" class="fa fa-caret-square-o-right"></i></button>
+            </div>
         </div>
         {% for key, region in regions.items %}
         <div id="{{key}}" class="tabcontent">
-            <button onclick="removeRegion('{{key}}')" style="float: right">Delete {{key}}</button>
-            <table class="table table-striped" ID="placeTable" style="width:90%" border="1" data-toggle="table" data-show-columns="true" data-show-export="true" data-search="true" data-advanced-search="true">
+            <button class="button" onclick="removeRegion('{{key}}')" style="float: right">Delete {{key}}</button>
+            <table class="table table-striped" id="placeTable_{{key}}" style="width:90%" border="1" data-toggle="table" data-show-columns="true" data-show-export="true" data-search="true" data-advanced-search="true">
                 <thead>
                 <tr>
                     <th>name</th>
@@ -50,24 +56,27 @@
                     <td>{{place.get_tweet_number}}</td>
                     <td>{{place.get_user_number}}</td>
                     <td>{{place.last_tweet_date}}</td>
-                    <td><button onclick="removePlace('{{key}}', '{{place.get_name}}')">remove</button></td>
+                    <td><button class="button" onclick="removePlace('{{key}}', '{{place.get_name}}')">remove</button></td>
                 </tr>
                 {% endfor %}
                 </tbody>
             </table>
         </div>
         {% endfor %}
-        <div id="forms" class="tabcontent">
-        <form action="/dashboard/{{name}}" method="post">
-            {% csrf_token %}
-            {{ region_form }}
-            <input type="submit" value="Add region">
-        </form>
-        <br>
-        <form action="/dashboard/{{name}}" method="post">
+    </div>
+    <div>
+        <button style="float: left; margin-top: 20px;" class="button" id="addPlace" onclick="addPlaceRow()">&#43;</button>
+        <form id="place_form" style="float: left; margin-top: 20px" action="/dashboard/{{name}}" method="post">
             {% csrf_token %}
             {{ place_form }}
-            <input type="submit" value="Add place">
+            <input class="button" type="submit" value="Add place">
+        </form>
+    </div>
+    <div id="forms">
+        <form id="region_form" action="/dashboard/{{name}}" method="post">
+            {% csrf_token %}
+            {{ region_form }}
+            <input class="button" type="submit" value="Add region">
         </form>
         <br>
         <form method="post" id="removeForm" style="visibility: hidden; height: 0">
@@ -76,7 +85,7 @@
             <input id="removePlaceSubmit" type="submit" formaction="/dashboard/{{name}}" value="Remove Place">
         </form>
     </div>
-    </div>
+
 </body>
 {% include "basicScripts.html" %}
 {% include "tableScripts.html" %}
@@ -90,5 +99,20 @@
             button.innerHTML = "Count Places";
         }
     }
+    window.addEventListener('load', (event) => {
+        hideElement("region");
+        hideElement("forms");
+        hideElement("arrow");
+        hideElement("place_form");
+        var tablinks = document.getElementsByClassName("tablinks");
+        var tabllinkszero = tablinks[0];
+        tabllinkszero.className += " active";
+        var txt = tabllinkszero.textContent || tabllinkszero.innerText;
+        if (txt == "+") {
+            hideElement("addPlace");
+        } else {
+            document.getElementById(txt).style.display = "block";
+        }
+    });
 </script>
 </html>

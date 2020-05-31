@@ -1,48 +1,10 @@
-function calculateDayList(start, end) {
-	for(var arr=[],dt=new Date(start); dt<=end; dt.setDate(dt.getDate()+1)){
-		arr.push(new Date(dt));
-	}
-	return arr;
-}
-
-function getRandomColor() {
-  var letters = '0123456789ABCDEF';
-  var color = '#';
-  for (var i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-}
-
 function showTrends() {
-	var div = document.getElementById("results");
-	div.innerHTML = "";
-	var startDate = document.getElementById("start_date").value;
+    var startDate = document.getElementById("start_date").value;
 	var endDate = document.getElementById("end_date").value;
-	var word_list = getCheckedSearchWords();
-	var locations = buildSelectedLocations();
-	if (locations.length == 0) {
-	    return;
-	}
-	$.ajax({
-		url: window.location.origin + "/word_trends_get",
-		data: {
-			'user_name': document.getElementById("user").innerHTML,
-			'locations_list': JSON.stringify(locations),
-			'words_list': JSON.stringify(word_list),
-			'start_date': startDate,
-			'end_date': endDate
-		},
-		dataType: 'json',
-		method: 'post',
-		success: function (res, status) {
-			buildCanvas("trends_chart", div);
+    ajaxCall("/word_trends_get", "None", function (res, status) {
+			buildCanvas("trends_chart", document.getElementById("results"));
 			buildTrendsChart(res, "trends_chart", startDate, endDate)
-		},
-		error: function (res) {
-            error(res);
-		}
-	});
+		} , function(res) {});
 }
 
 function buildTrendsChart(res, id, start, end) {
@@ -87,33 +49,12 @@ function buildTrendsChart(res, id, start, end) {
 }
 
 function showTopWords() {
-	var div = document.getElementById("results");
-	div.innerHTML = "";
 	var startDate = document.getElementById("start_date").value;
 	var endDate = document.getElementById("end_date").value;
-	var locations = buildSelectedLocations();
-	if (locations.length == 0) {
-	    return;
-	}
-	div.innerHTML = "";
-	$.ajax({
-		url: window.location.origin + "/top_words_per_date_get",
-		data: {
-			'user_name': document.getElementById("user").innerHTML,
-			'locations_list': JSON.stringify(locations),
-			'start_date': startDate,
-			'end_date': endDate
-		},
-		dataType: 'json',
-		method: 'post',
-		success: function (res, status) {
-			buildCanvas("top_words_per_date_chart", div);
-			buildTopWordsChart(res, "top_words_per_date_chart", startDate, endDate)
-		},
-		error: function (res) {
-            error(res);
-		}
-	});
+	ajaxCall("/top_words_per_date_get", "None", function(res, status) {
+		buildCanvas("top_words_per_date_chart", document.getElementById("results"));
+		buildTopWordsChart(res, "top_words_per_date_chart", startDate, endDate);
+	}, function (res) {} );
 }
 
 function buildTopWordsChart(res, id, start, end) {
@@ -179,37 +120,14 @@ function buildTopWordsChart(res, id, start, end) {
     }
 
 function showPopularityWords() {
-	var div = document.getElementById("results");
-	div.innerHTML = "";
 	var startDate = document.getElementById("start_date").value;
 	var endDate = document.getElementById("end_date").value;
-	var locations = buildSelectedLocations();
-	if (locations.length == 0) {
-	    return;
-	}
-	var word_list = getCheckedSearchWords();
-	div.innerHTML = "";
-	$.ajax({
-		url: window.location.origin + "/popularity_of_words_get",
-		data: {
-			'user_name': document.getElementById("user").innerHTML,
-			'locations_list': JSON.stringify(locations),
-			'words_list': JSON.stringify(word_list),
-			'start_date': startDate,
-			'end_date': endDate
-		},
-		dataType: 'json',
-		method: 'post',
-		success: function (res, status) {
-			buildCanvas("popularity_of_words_chart", div);
-			res = JSON.parse(res);
-			var words = res['word_list'];
-			buildPopularityChart(res, "popularity_of_words_chart", startDate, endDate, words, locations)
-		},
-		error: function (res) {
-            error(res);
-		}
-	});
+	ajaxCall("/popularity_of_words_get", "None", function (res, status) {
+	    buildCanvas("popularity_of_words_chart", document.getElementById("results"));
+		res = JSON.parse(res);
+		var words = res['word_list'];
+		buildPopularityChart(res, "popularity_of_words_chart", startDate, endDate, words, locations);
+	}, function (res) {})
 }
 
 function buildPopularityChart(res, id, start, end, word_list, locations) {
@@ -261,32 +179,12 @@ function buildCanvas(id, div) {
 }
 
 function showMostPopularWords() {
-	var div = document.getElementById("results");
-	div.innerHTML = "";
 	var startDate = document.getElementById("start_date").value;
 	var endDate = document.getElementById("end_date").value;
-	var locations = buildSelectedLocations();
-	if (locations.length == 0) {
-	    return;
-	}
-	$.ajax({
-		url: window.location.origin + "/most_popular_word_get",
-		data: {
-			'user_name': document.getElementById("user").innerHTML,
-			'locations_list': JSON.stringify(locations),
-			'start_date': startDate,
-			'end_date': endDate
-		},
-		dataType: 'json',
-		method: 'post',
-		success: function (res, status) {
-            buildCanvas("most_popular_word_chart", div);
-			buildPopularWordsChart(res, "most_popular_word_chart", startDate, endDate)
-		},
-		error: function (res) {
-            error(res);
-		}
-	});
+	ajaxCall("/most_popular_word_get", "None", function (res, status) {
+        buildCanvas("most_popular_word_chart", document.getElementById("results"));
+		buildPopularWordsChart(res, "most_popular_word_chart", startDate, endDate)
+	}, function (res) {});
 }
 
 function buildPopularWordsChart(res, id, start, end) {
@@ -354,39 +252,12 @@ function showFirstTime() {
 	div.innerHTML = "";
 	var startDate = document.getElementById("start_date").value;
 	var endDate = document.getElementById("end_date").value;
-	var word_list = getCheckedSearchWords();
-	var locations = buildSelectedLocations();
-	if (locations.length == 0) {
-	    return;
-	}
-	var max = document.getElementById("ftd_max").value;
-	$.ajax({
-		url: window.location.origin + "/first_time_get",
-		data: {
-			'user_name': document.getElementById("user").innerHTML,
-			'locations_list': JSON.stringify(locations),
-			'words_list': JSON.stringify(word_list),
-			'start_date': startDate,
-			'end_date': endDate,
-			'max_results': max
-		},
-		dataType: 'json',
-		method: 'post',
-		success: function (res, status) {
-			buildFirstTimeTables(res, "results", startDate, endDate)
-		},
-		error: function (res) {
-            error(res);
-		}
-	});
+	ajaxCall("/first_time_get", "first_time_table", function(res, status) {
+	buildFirstTimeTables(res, "results", startDate, endDate);
+	}, function (res) {}, "ftd_max");
 }
 
 function buildFirstTimeTables(res, id, start, end) {
-	hideTable("tweets_table");
-	hideTable("users_table");
-	hideTable("origin_table");
-	hideTable("most_retweeted_table");
-	showTable("first_time_table");
     var tableData = [];
     for (var i = 0; i < res.length; i++ ){
         for (var j = 0; j < res[i]["row_data"].length; j++) {
@@ -410,39 +281,12 @@ function showMostRetweeted(){
 	div.innerHTML = "";
 	var startDate = document.getElementById("start_date").value;
 	var endDate = document.getElementById("end_date").value;
-	var word_list = getCheckedSearchWords();
-	var locations = buildSelectedLocations();
-	if (locations.length == 0) {
-	    return;
-	}
-	var max = document.getElementById("mr_max").value;
-	$.ajax({
-		url: window.location.origin + "/most_retweeted_get",
-		data: {
-			'user_name': document.getElementById("user").innerHTML,
-			'locations_list': JSON.stringify(locations),
-			'words_list': JSON.stringify(word_list),
-			'start_date': startDate,
-			'end_date': endDate,
-			'max_results': max
-		},
-		dataType: 'json',
-		method: 'post',
-		success: function (res, status) {
+	ajaxCall("/most_retweeted_get", "most_retweeted_table", function (res, status) {
 			buildMostRetweetedTable(res, "most_retweeted_chart", startDate, endDate)
-		},
-		error: function (res) {
-            error(res);
-		}
-	});
+	}, function (res) {}, "mr_max");
 }
 
 function buildMostRetweetedTable(res, id, start, end) {
-    hideTable("tweets_table");
-	hideTable("users_table");
-	hideTable("origin_table");
-	hideTable("first_time_table");
-	showTable("most_retweeted_table");
     var tableData = [];
     for (var i = 0; i < res.length; i++ ){
             tableData.push({
@@ -495,43 +339,14 @@ function getSlidersDate() {
 }
 
 function showPopularUsers() {
-    hideTable("tweets_table");
-	showTable("users_table");
-	hideTable("origin_table");
-	hideTable("first_time_table");
-	hideTable("most_retweeted_table");
-	var locations = buildSelectedLocations();
-	if (locations.length == 0) {
-	    return;
-	}
-	var word_list = getCheckedSearchWords();
-	var sliders_data = getSlidersDate();
-	var startDate = document.getElementById("start_date").value;
-	var endDate = document.getElementById("end_date").value;
-	$("#utable").bootstrapTable('removeAll');
-	$.ajax({
-		url: window.location.origin + "/popular_users_get",
-		data: {
-			'user_name': document.getElementById("user").innerHTML,
-			'locations_list': JSON.stringify(locations),
-			'start_date': startDate,
-			'end_date': endDate,
-			'words_list': JSON.stringify(word_list),
-			'sliders_data': JSON.stringify(sliders_data)
-		},
-		dataType: 'json',
-		method: 'post',
-		success: function (res, status) {
+	ajaxCall("/popular_users_get", "users_table", function (res, status) {
+	        $("#utable").bootstrapTable('removeAll');
 			var data = [];
 			res.forEach(function (t) {
 				data.push(parseUserSendaway(t));
 			});
 			$("#utable").bootstrapTable('append', data)
-		},
-		error: function (res) {
-			alert("unable to get popular users from db, got:" + res.status + ". Please try again later");
-		}
-	});
+		}, function (res) {} );
 }
 
 function submitPopularUsers() {

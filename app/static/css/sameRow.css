@@ -7,4 +7,12 @@
 }
 
 .settingsRow {
+  padding: 8px 12px;
+  font-size: 15px;
+  text-align: center;
+  cursor: pointer;
+  color: #ffffff;
+  background-color: #00ccff;
+  border: 2px solid #ffffff;
+  border-radius: 7px;
 }

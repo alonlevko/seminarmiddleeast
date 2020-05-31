@@ -103,7 +103,7 @@ class TableLoader():
         return defult_coulmns
 
     def __init__(self):
-        # self.load_stop_words()
+        self.stop_words = self.load_stop_words()
         self.defult_coulmns = self.load_default_columns()
 
     def registerTable(self, name, table, conn=None):
@@ -125,7 +125,7 @@ class TableLoader():
         :param conn: the sql engine
         :return: None
         """
-        self.registerTable('stop_words', self.load_stop_words(), conn)
+        self.registerTable('stop_words', self.stop_words, conn)
 
     def add_table_from_json(self, objects, conn=None):
         """
@@ -257,7 +257,8 @@ class TableLoader():
 
         self.registerTable('dates', df_dates, conn)
 
-    def keys2table(self, table_name, keys, where, num=20000, max_req=400, json_col="value", conn=None, docs_list=None):
+    def keys2table(self, table_name, keys, where=None, num=20000, max_req=400, json_col="value", conn=None,
+                   docs_list=None):
         """
         create the tables needed for keys (columns) from docs objects and register them.
         if needed, takes the docs from the db.
@@ -276,13 +277,9 @@ class TableLoader():
         if len(keys) == 0:
             return False
         docs = []
-        if docs_list == None:
-            client.connect()  # connect to db
-            tweet_db = client.get(table_name, remote=True)  # get db as python object from remote db
-            if len(where) > 0:
-                tweet_db = QueryResult(Query(tweet_db, selector=where))
-        else:
-            tweet_db = docs_list
+        if len(docs_list) == 0:
+            return
+        tweet_db = docs_list
         index = 0
         flag = json_col in keys and table_name == tweet_database_name
         tweet_list_json = []
@@ -290,6 +287,8 @@ class TableLoader():
         for doc in tweet_db:  # db object is iterable so we can just iterate
             if flag:
                 tweet_list_json.append(doc[json_col])  # get the jason string of the object
+            if keys[0] == 'all_columns':
+                keys = list(doc.keys())
             if table_name == user_database_name:
                 temp = {}
                 for k in keys:
@@ -353,10 +352,8 @@ class QueriesManager():
                 self.str = file.readline().strip()
                 self.tweet_cols = [s.strip() for s in file.readline().split(",")]
                 self.where_tweets = (file.readline().strip())
-                # self.where_tweets = {k: {'$in': where_tweets[k]} for k in where_tweets.keys()}
                 self.users_cols = [s.strip() for s in file.readline().split(",")]
                 self.where_users = file.readline().strip()
-                # self.where_users = {k: {'$in': where_users[k]} for k in where_users.keys()}
                 self.parms = [s.strip() for s in file.readline().split(",")]
                 self.info = file.readline().strip()
                 file.close()
@@ -407,6 +404,7 @@ class QueriesManager():
                 out['u'] = {k: {'$in': dic[k]} for k in dic.keys()}
             else:
                 out['u'] = {}
+            out['n'] = {parm: arg for arg, parm in zip(args, self.parms)}
             return out
 
     # class Querie() END
@@ -435,6 +433,7 @@ class QueriesManager():
     def sql(self, querie, conn=None):
         """
         run the querie on the tables
+        :param params_sql_123:  a dummy
         :param querie: the querie to run
         :param conn: the sql engine
         :return: pd.DataFrame of the result from the querie
@@ -450,7 +449,7 @@ class QueriesManager():
         :return: the sql engine
         """
         if SQLITE:
-            return create_engine('sqlite://')
+            return create_engine('sqlite:///:memory:')
         else:
             return sqlContext
 
@@ -514,20 +513,18 @@ class QueriesManager():
         querie = self.queries[args[0]]
         out_dict = querie(args[1:])
         querie_str, where_tweets, where_users = out_dict['q'], out_dict['t'], out_dict['u']
-        print("create connection to local db")
+        # create connection to local db
         conn = self.connect_sql()
-        print("registerStopwords")
+        # load stop words
         self.tables.registerStopwords(conn)
-        print("tweet keys2table")
-        is_table_empty = self.tables.keys2table(tweet_database_name, querie.tweet_cols, where_tweets, num, max_req,
-                                                conn=conn, docs_list=tweets)
-        if not is_table_empty:
-            print("users keys2table")
-            is_table_empty = self.tables.keys2table(user_database_name, querie.users_cols, where_users, num, max_req,
-                                                    conn=conn, docs_list=users)
-        print("run sql")
-        df = self.sql(querie_str, conn)
+        # load from tweets db
+        self.tables.keys2table(tweet_database_name, querie.tweet_cols, where_tweets, num, max_req,
+                               conn=conn, docs_list=tweets)
+        # load from users db
+        self.tables.keys2table(user_database_name, querie.users_cols, where_users, num, max_req,
+                               conn=conn, docs_list=users)
 
+        df = self.sql(querie_str, conn)
         self.close_conncetion(conn)
 
         if test:
@@ -573,49 +570,10 @@ class QueriesManager():
     def __getitem__(self, args, test=False, html=True):
         return self.call_querie(args, test, html)
 
-def generate_single_place_selector(user_name, region_name, place_name):
-    return {'user_name': {'$eq': user_name}, 'region_name': {'$eq': region_name}, 'place_name': {'$eq': place_name}}
 
-def get_from_db_by_params(user_name, region_name, place_name, db_name, object_example, asdocs):
-    print("get_from_db_by_params")
-    print(user_name + ";" + region_name + ";" + place_name + ";" + db_name)
-    try:
-        our_list = []
-        client.connect()
-        db = client.get(db_name, remote=True)
-        query_result = QueryResult(Query(db, selector=generate_single_place_selector(user_name, region_name, place_name)))
-        index = 0
-        if asdocs:
-            for doc in query_result:
-                our_list.append(doc)
-                index = + 1
-        else:
-            for doc in query_result:
-                our_list.append(object_example.build_from_document(doc))
-                index =+ 1
-    except CloudantException as exc:
-        print("CloudantException in get_from_db_by_params")
-        print(exc)
-        our_list = []
-    except Exception as exc:
-        print("non CloudantException exception in get_from_db_by_params")
-        print(exc)
-        our_list = []
-    finally:
-        client.disconnect()
-        print("get_from_db_by_params id: " + str(db_name) + "len: " + str(len(our_list)))
-    return our_list
+if __name__ == '__main__':
+    from for_noam import tweet_list, users_list
 
-def loadData():
-    user_name = 'Ori'
-    locations = [{'region': 'Ayosh', 'place': "Ramallah"}, {'region':'Ayosh', 'place':'Nablus'}]
-    tweet_list = get_from_db_by_params(user_name, locations[0]['region'], locations[0]['place'], tweet_database_name, None, True)
-    users_list = get_from_db_by_params(user_name, locations[0]['region'], locations[0]['place'], twitter_users_database_name, None, True)
-    return tweet_list, users_list
-
-def check(tweet_list, users_list):
-    print("analytics check!")
-    import os
     params_list = [['First_Time', ['a']],
                    ['Most_Retweeted', ['a']],
                    ['Phrase_trend', ['a']],
@@ -625,16 +583,7 @@ def check(tweet_list, users_list):
                    ['Popularity_of_word_bank_per_place', ['a']],
                    ['Opinion_Leaders', ['Nablus'], ['0.05'], ['0.9'], ['0.05'], ['0.9']],
                    ['Opinion_Leaders_by_phrase', ['a'], ['Nablus'], ['0.05'], ['0.9'], ['0.05'], ['0.9']]]
-    print(len(tweet_list))
-    print(len(users_list))
     queriesManager = QueriesManager()
-    params = ['Popular_word_per_date']
-    print(os.getcwd())
-    df = queriesManager.call_querie(params, tweet_list, users_list, html=True)
-    print(df)
-
-if __name__ == '__main__':
-    tweet_list, users_list = loadData()
-    check(tweet_list, users_list)
-
-
+    params = ['Test']
+    df = queriesManager.call_querie(params, tweet_list, users_list, num=10)
+    print(df.to_string())

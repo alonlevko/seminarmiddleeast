@@ -95,10 +95,11 @@ class User:
             self.search_words.append(search_word)
         self.save_me_to_db()
 
-    def remove_search_word(self, search_word):
-        if search_word in self.search_words:
-            self.search_words.remove(search_word)
-            self.search_words = list(filter(None, self.search_words))
+    def remove_search_word(self, search_words):
+        for word in search_words:
+            if word in self.search_words:
+                self.search_words.remove(word)
+                self.search_words = list(filter(None, self.search_words))
         self.save_me_to_db()
 
     def all_search_words(self):
