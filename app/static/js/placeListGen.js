@@ -166,6 +166,7 @@ function removeWord() {
 function removeSelectedWords() {
     var words = getCheckedSearchWords();
     getAllWords(words, "");
+    document.getElementById("add_word_dialog").close();
 }
 
 function getAllWords(toRemove, toAdd) {
