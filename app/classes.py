@@ -177,7 +177,7 @@ class Region:
     def get_place_name_and_counters_dict(self):
         out = []
         for name, place in self.places.items():
-            out.append({'name': name, 'tweets': len(place.tweets), 't_users': len(place.users)})
+            out.append({'name': name, 'tweets': place.tweets, 't_users': place.users})
         return out
 
     def get_places_handle(self):
@@ -215,21 +215,24 @@ class Place:
         self.collector = 0
         self.config_last_tweet_date()
         if tweets is None:
-            self.tweets = []
+            self.tweets = 0
         else:
-            self.tweets = tweets
+            self.tweets = len(tweets)
         if users is None:
             self.users = []
         else:
-            self.users = users
+            self.users = len(users)
 
     def add_user(self, tuser):
+        self.users += 1
+        return
         stuserid = str(tuser.id)
         if stuserid not in self.users:
             self.users.append(stuserid)
             #self.save_user_to_db(tuser)
 
     def convert_user_as_num_to_string(self):
+        return
         string_ids = []
         for userid in self.users:
             string_ids.append(str(userid))
@@ -237,22 +240,22 @@ class Place:
         self.users = self.users + string_ids
 
     def get_tweet_number(self):
-        return len(self.tweets)
+        return self.tweets
 
     def get_user_number(self):
-        return len(self.users)
+        return self.users
 
     def add_tweet(self, tweet):
-        stid = str(tweet.id)
-        if stid in self.tweets:
-            return
+        #stid = str(tweet.id)
+        #if stid in self.tweets:
+        #    return
 
         tweet_time = parse(tweet.created_at)
         if tweet_time > self.last_tweet_date:
             self.last_tweet_date = tweet_time
 
-        self.tweets.append(stid)
-
+        #self.tweets.append(stid)
+        self.tweets += 1
         if tweet.id > self.max_id:
             self.max_id = tweet.id
 
@@ -295,6 +298,7 @@ class Place:
             self.add_user(u)
 
     def remove_users_already_in(self, users_list):
+        return
         result_list = []
         for user in users_list:
             if str(user.id) not in self.users:
@@ -302,6 +306,7 @@ class Place:
         return result_list
 
     def remove_tweets_already_in(self, tweet_list):
+        return
         result_list = []
         for tweet in tweet_list:
             if str(tweet.id) not in self.tweets:
@@ -441,6 +446,12 @@ class Place:
         else:
             pass
 
+    def convert_tweet_users_list_to_count(self):
+        length = len(self.tweets)
+        self.tweets = length
+        length = len(self.users)
+        self.users = length
+
     def removeTweets(self, user, region):
         print("removing tweets for %s, %s, %s", user.get_name(), region.get_name(), self.name)
         tweets = get_from_db_by_params(user.get_name(), region.get_name(), self.name, new_tweet_database_name,
@@ -474,17 +485,6 @@ def generate_extensions(element_list, user, region, place, obj):
         exten.calculate_extensions()
 
     return extensions_list
-
-def build_tweet_extension(doc):
-    return TweetExtension(jsonpickle.decode(str(doc['value'])), str(doc['user_name']), str(doc['region_name']),
-                          str(doc['place_name']), str(doc['concept']), str(doc['entities']),
-                          str(doc['entities_sentiment']), str(doc['keywords']), str(doc['keywords_sentiment']),
-                          str(doc['category']))
-
-
-def build_user_extension(doc):
-    return UserExtension(jsonpickle.decode(str(doc['value'])), str(doc['user_name']), str(doc['region_name']),
-                         str(doc['place_name']))
 
 
 class ExtensionInterface:
@@ -570,13 +570,10 @@ class TweetExtension(ExtensionInterface):
             'keywords': self.keywords,
             'keywords_sentiment': self.keywords_sentiment,
             'category': self.category,
-            'date': self.date
+            'date': self.date,
+            'tdata': self.tweet.text
         }
         return document
-
-    @staticmethod
-    def my_document_parser():
-        return build_tweet_extension
 
     @staticmethod
     def build_from_document(doc):
@@ -598,9 +595,6 @@ class UserExtension(ExtensionInterface):
         self.total_replies_count = total_replies_count
         self.total_quoted_count = total_quoted_count
 
-    @staticmethod
-    def my_document_parser():
-        return build_user_extension
 
     def get_premium_all_tweets(self):
         rule_str = "from:" + self.twitter_user.screen_name
@@ -687,8 +681,6 @@ class UserExtension(ExtensionInterface):
 
 # if get_extension is true we return the full extension object. else we return the value only.
 def get_from_db(id_list, db_name, object_example=None):
-        if object_example is not None and object_example is not "asdocs":
-            parser = object_example.my_document_parser()
         result_list = []
         client_get_from_db = Cloudant(serviceUsername, servicePassword, url=serviceURL, adapter=httpAdapter2)
         try:
@@ -703,7 +695,7 @@ def get_from_db(id_list, db_name, object_example=None):
                 if object_example is "asdocs":
                     result_list.append(doc)
                 elif object_example is not None:
-                    result_list.append(parser(doc))
+                    result_list.append(object_example.build_from_document(doc))
                     index = + 1
                 else:
                     dec = jsonpickle.decode(str(doc['value']))

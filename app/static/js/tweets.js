@@ -176,7 +176,7 @@ function showTweets(button) {
 				button.disabled = false;
 				button.innerHTML = "Inspect Tweets";
 				//clearInterval(interval);
-			}, function(res) {});
+			}, function(res) {}, undefined, false, false);
 }
 
 function parseUserSendaway(t) {
@@ -202,7 +202,7 @@ function showUsers() {
 			data.push(parseUserSendaway(t));
 		});
 		$('#utable').bootstrapTable('append', data)
-    }, function(res) {});
+    }, function(res) {}, undefined, false, false);
 }
 
 function buildAICharts() {
@@ -242,7 +242,7 @@ function loadQuarys() {
                     link: `<a target="_blank" href="https://twitter.com/search?q=` + res + `&src=typed_query">Link</a><br>`
                 });
 	       }
-	}, function (res) {});
+	}, function (res) {}, undefined, false, false);
 }
 
 function show_quary_reload() {

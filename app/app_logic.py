@@ -211,6 +211,14 @@ def zero_collectors():
     iterate_over_all_places(restart)
 
 
+def change_lists_to_counts():
+    def transform(place):
+        place.convert_tweet_users_list_to_count()
+    iterate_over_all_places(transform)
+    for user in user_dictionary.values():
+        user.save_me_to_db()
+
+
 def renew_tweet_db():
     print("renew_tweet_db:")
     for user in user_dictionary.values():
@@ -295,7 +303,7 @@ def get_all_twitter_users_ids(tweetext_list, tasdocs=False):
 def slider_val_transform(slider_values):
     result = []
     for value in slider_values:
-        result.append([str(float(value[0]) * 0.01), str(float(value[1]) * 0.01)])
+        result.append([str((100 - float(value[0])) * 0.01), str((100 - float(value[1])) * 0.01)])
     return result
 
 def convert_to_iso(full_date):
@@ -334,6 +342,7 @@ def single_word_obj(word, wordcolname, df, days_list):
         dates_list.append(k)
         counter_list.append(v)
     return {'word': word, 'dates': dates_list, 'counter': counter_list}
+
 
 def generate_days_list(start_date, end_date, with_marks=False):
     sdate = date(year=int(start_date[0:4]), month=int(start_date[4:6]), day=int(start_date[6:]))

@@ -4,7 +4,7 @@ function showTrends() {
     ajaxCall("/word_trends_get", "None", function (res, status) {
 			buildCanvas("trends_chart", document.getElementById("results"));
 			buildTrendsChart(res, "trends_chart", startDate, endDate)
-		} , function(res) {});
+		} , function(res) {}, undefined, true, true);
 }
 
 function buildTrendsChart(res, id, start, end) {
@@ -54,7 +54,7 @@ function showTopWords() {
 	ajaxCall("/top_words_per_date_get", "None", function(res, status) {
 		buildCanvas("top_words_per_date_chart", document.getElementById("results"));
 		buildTopWordsChart(res, "top_words_per_date_chart", startDate, endDate);
-	}, function (res) {} );
+	}, function (res) {}, undefined, true, false);
 }
 
 function buildTopWordsChart(res, id, start, end) {
@@ -122,12 +122,13 @@ function buildTopWordsChart(res, id, start, end) {
 function showPopularityWords() {
 	var startDate = document.getElementById("start_date").value;
 	var endDate = document.getElementById("end_date").value;
+	locations = buildSelectedLocations();
 	ajaxCall("/popularity_of_words_get", "None", function (res, status) {
 	    buildCanvas("popularity_of_words_chart", document.getElementById("results"));
 		res = JSON.parse(res);
 		var words = res['word_list'];
 		buildPopularityChart(res, "popularity_of_words_chart", startDate, endDate, words, locations);
-	}, function (res) {})
+	}, function (res) {}, undefined, true, true);
 }
 
 function buildPopularityChart(res, id, start, end, word_list, locations) {
@@ -184,7 +185,7 @@ function showMostPopularWords() {
 	ajaxCall("/most_popular_word_get", "None", function (res, status) {
         buildCanvas("most_popular_word_chart", document.getElementById("results"));
 		buildPopularWordsChart(res, "most_popular_word_chart", startDate, endDate)
-	}, function (res) {});
+	}, function (res) {}, undefined, true, false);
 }
 
 function buildPopularWordsChart(res, id, start, end) {
@@ -254,7 +255,7 @@ function showFirstTime() {
 	var endDate = document.getElementById("end_date").value;
 	ajaxCall("/first_time_get", "first_time_table", function(res, status) {
 	buildFirstTimeTables(res, "results", startDate, endDate);
-	}, function (res) {}, "ftd_max");
+	}, function (res) {}, "ftd_max", true, true);
 }
 
 function buildFirstTimeTables(res, id, start, end) {
@@ -283,7 +284,7 @@ function showMostRetweeted(){
 	var endDate = document.getElementById("end_date").value;
 	ajaxCall("/most_retweeted_get", "most_retweeted_table", function (res, status) {
 			buildMostRetweetedTable(res, "most_retweeted_chart", startDate, endDate)
-	}, function (res) {}, "mr_max");
+	}, function (res) {}, "mr_max", true, true);
 }
 
 function buildMostRetweetedTable(res, id, start, end) {

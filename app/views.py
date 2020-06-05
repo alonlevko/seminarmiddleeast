@@ -152,24 +152,30 @@ def popular_users_get(request):
         twitter_users, tweets = generate_users_tweets(request, tasdocs=True, uasdocs=True)
         if isinstance(twitter_users, Exception):
             return JsonResponse(str(twitter_users), safe=False, status=500)
+        elif len(twitter_users) == 0:
+            return JsonResponse("Error: No Tweets in location / date / search phrase (if included)", safe=False, status=500)
         slider_valus = slider_val_transform(jsonpickle.decode(request.POST.get('sliders_data', None)))
         print(len(twitter_users))
         print(len(tweets))
         # ["followers_slider", "retweet_slider", "favorites_slider", "tweets_slider"]
         # ["followers, statusses, favorites (likes), retweets]
         queriesManager = QueriesManager()
-        params = ['Opinion_Leaders', [str(slider_valus[0][0])], [str(slider_valus[0][1])],
-                  [str(slider_valus[3][0])], [str(slider_valus[3][1])], [str(slider_valus[2][0])], [str(slider_valus[2][1])],
-                  [str(slider_valus[1][0])], [str(slider_valus[1][1])]]
+        params = ['Opinion_Leaders', [str(slider_valus[0][1])], [str(slider_valus[0][0])],
+                  [str(slider_valus[3][1])], [str(slider_valus[3][0])], [str(slider_valus[2][1])],
+                  [str(slider_valus[2][0])],
+                  [str(slider_valus[1][1])], [str(slider_valus[1][0])]]
         print(params)
         print(twitter_users[0].keys())
         df = queriesManager.call_querie(params, tweets, twitter_users)
         print(df)
+        if df.empty:
+            return JsonResponse("Error: No opinion leaders found", safe=False)
         idlist = df['id'].tolist()
-        print(idlist)
+        print(len(idlist))
         users_list = get_from_db(idlist, twitter_users_database_name, UserExtension)
         print(len(users_list))
-    return JsonResponse(user_ext_to_json(users_list), safe=False)
+    user_ext_list = user_ext_to_json(users_list)
+    return JsonResponse(user_ext_list, safe=False)
 
 
 @csrf_exempt
@@ -204,6 +210,8 @@ def tweet_list_place(request):
                 json_list.append(result)
             total_tweets = total_tweets + json_list
         #print(total_tweets)
+        if len(total_tweets) == 0:
+            return JsonResponse("Error: No Tweets in location / date / search phrase (if included)", safe=False, status=500)
         return JsonResponse(total_tweets, safe=False)
     else:
         empty = {}
@@ -217,6 +225,8 @@ def show_users_place(request):
         twitter_users, _ = generate_users_tweets(request)
         if isinstance(twitter_users, Exception):
             return JsonResponse(str(twitter_users), safe=False, status=500)
+        elif len(twitter_users) == 0:
+            return JsonResponse("Error: No Tweets in location and date", safe=False, status=500)
         return JsonResponse(user_ext_to_json(twitter_users), safe=False)
     else:
         empty = {}
@@ -234,6 +244,8 @@ def word_trends_get(request):
         total_tweets = get_tweet_list(locations, get_user(name), days_list, None, asdocs=True)
         if isinstance(total_tweets, Exception):
             return JsonResponse(str(total_tweets), safe=False, status=500)
+        elif len(total_tweets) == 0:
+            return JsonResponse("Error: No Tweets in location and date", safe=False, status=500)
         word_list, pharses_list = filter_strings(word_list)
         params = ["Word_trend", word_list]
         print(params)
@@ -268,6 +280,8 @@ def top_words_per_date_get(request):
         total_tweets = get_tweet_list(locations, get_user(name), days_list, None, asdocs=True)
         if isinstance(total_tweets, Exception):
             return JsonResponse(str(total_tweets), safe=False, status=500)
+        elif len(total_tweets) == 0:
+            return JsonResponse("Error: No Tweets in location and date", safe=False, status=500)
         for k, _ in dates_counter.items():
             dates_counter[k] = {'word': "", 'count': 0}
         params = ["Popular_word_per_date"]
@@ -302,10 +316,14 @@ def popularity_of_words_get(request):
         total_tweets = get_tweet_list(locations, get_user(name), days_list, None, asdocs=True)
         if isinstance(total_tweets, Exception):
             return JsonResponse(str(total_tweets), safe=False, status=500)
+        elif len(total_tweets) == 0:
+            return JsonResponse("Error: No Tweets in location and date", safe=False, status=500)
         params = ["Popularity_of_word_bank_per_place", word_list]
         print(params)
         print(len(total_tweets))
         df = queriesManager.call_querie(params, total_tweets, [])
+        if df.empty:
+            return JsonResponse("Error: No appearances of search phrases in tweets", safe=False)
         rows = df.shape[0]
         df = df.to_json()
         df = df[:-1]
@@ -330,8 +348,10 @@ def most_popular_word_get(request):
         total_tweets = get_tweet_list(locations, get_user(name), days_list, None, asdocs=True)
         if isinstance(total_tweets, Exception):
             return JsonResponse(str(total_tweets), safe=False, status=500)
+        elif len(total_tweets) == 0:
+            return JsonResponse("Error: No Tweets in location and date", safe=False, status=500)
         params = ["Popular_word_per_place"]
-        df = queriesManager.call_querie(params, total_tweets)
+        df = queriesManager.call_querie(params, total_tweets, [])
         print(df)
         for i, row in df.iterrows():
             place_list.append(row['place_name'])
@@ -350,7 +370,9 @@ def first_time_get(request):
         max_results = request.POST.get('max_results', None)
         total_users, total_tweets = generate_users_tweets(request, use_words=False, tasdocs=True, uasdocs=True)
         if isinstance(total_users, Exception):
-            return JsonResponse(total_users, safe=False, status=500)
+            return JsonResponse(str(total_users), safe=False, status=500)
+        elif len(total_tweets) == 0:
+            return JsonResponse("Error: No Tweets in location and date", safe=False, status=500)
         print(len(total_tweets))
         print(len(total_users))
 
@@ -359,12 +381,16 @@ def first_time_get(request):
             print(params)
             df = queriesManager.call_querie(params, total_tweets, total_users)
             print(df)
+            if df.empty:
+                continue
             row_data = []
             # [id, text, user_id, screen_name, full_date, time_rnk]
             for index, row in df.iterrows():
                row_data.append([row["id"], row["text"], row["screen_name"], convert_to_iso(row["full_date"]),
                                 row["time_rnk"]])
             df_list.append({"word": word, "len": df.shape[0], "row_data": row_data})
+        if len(df_list) == 0:
+            return JsonResponse("Error: No Tweets in location and date contain search phrase", safe=False, status=500)
     return JsonResponse(df_list, safe=False)
 
 
@@ -379,6 +405,8 @@ def most_retweeted_get(request):
         total_users, total_tweets = generate_users_tweets(request, use_words=False, tasdocs=True, uasdocs=True)
         if isinstance(total_users, Exception):
             return JsonResponse(str(total_users), safe=False, status=500)
+        elif len(total_tweets) == 0:
+            return JsonResponse("Error: No Tweets in location and date", safe=False, status=500)
         print(len(total_tweets))
         print(len(total_users))
         for word in word_list:
@@ -386,12 +414,15 @@ def most_retweeted_get(request):
             print(params)
             df = queriesManager.call_querie(params, total_tweets, total_users)
             print(df)
-
+            if df.empty:
+                continue
             # [phrase, id, text, user_id, screen_name, full_date, retweet_count, retweet_rnk
             for index, row in df.iterrows():
                row_data.append([row["id"], row["text"], row["screen_name"], convert_to_iso(row["full_date"]),
                                 row["retweet_count"], row["retweet_rnk"], row["phrase"]])
     print(row_data)
+    if len(row_data) == 0:
+        return JsonResponse("Error: No Tweets in location and date contain search phrase", safe=False, status=500)
     return JsonResponse(row_data, safe=False)
 
 

@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 from django.apps import AppConfig
 from .app_logic import load_from_db, zero_collectors, update_lat_dates_all, convert_twitter_users_from_numbers, \
-    renew_tweet_db, zero_tweets_in_places, renew_tweet_user_db, add_searchwords
+    renew_tweet_db, zero_tweets_in_places, renew_tweet_user_db, add_searchwords, change_lists_to_counts
 import platform
 import subprocess
 import sys
@@ -34,6 +34,7 @@ class MyAppConfig(AppConfig):
         print("sqlite3.sqlite_version is: " + str(sqlite3.sqlite_version))
         load_from_db()
         zero_collectors()
+        #change_lists_to_counts()
         #renew_tweet_user_db()
         #update_lat_dates_all()
         #convert_twitter_users_from_numbers()

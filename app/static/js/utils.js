@@ -1,20 +1,37 @@
 function error(res) {
-    alert("unable to get data from db, got:" + res.status + ";" + res.responseText + ". Please try again later");
+    if (res.responseText.includes("Error:")){
+        alert(res.responseText);
+    } else {
+        alert("general error, got status:" + res.status + "; containing: " + res.responseText + ". Please try again later");
+    }
 }
 
-function ajaxCall(url, tableId, onSuccess, onFailure, maxid) {
+function ajaxCall(url, tableId, onSuccess, onFailure, maxid, datedNeeded=false, wordsNeeded=false) {
 	var locations = buildSelectedLocations();
 	if (locations.length == 0) {
+	    alert("no location selected. please select and try again");
 	    return;
 	}
-	document.body.style.cursor = 'wait';
+	$("html").addClass("wait");
     document.getElementById("results").innerHTML = '';
 	show_quary_reload();
 	showTableByIter(tableId);
 	var startDate = document.getElementById("start_date").value;
 	var endDate = document.getElementById("end_date").value;
+	if (datedNeeded) {
+	    if (startDate == "" || endDate == "") {
+	        alert("no dates selected. please select and try again");
+	        return;
+	    }
+	}
 	var sliders_data = getSlidersDate();
 	var word_list = getCheckedSearchWords();
+	if (wordsNeeded) {
+	    if (word_list.length == 0) {
+	        alert("no search phrases selected. please select and try again");
+	        return;
+	    }
+	}
 	var max = 0;
 	if (maxid != undefined) {
 	    max = document.getElementById(maxid).value;
@@ -33,11 +50,11 @@ function ajaxCall(url, tableId, onSuccess, onFailure, maxid) {
 		dataType: 'json',
 		method: 'post',
 		success: function (res, status) {
-		    document.body.style.cursor = 'default';
+		    $("html").removeClass("wait");
 			onSuccess(res, status);
 		},
 		error: function (res) {
-		    document.body.style.cursor = 'default';
+		    $("html").removeClass("wait");
             error(res);
             onFailure(res);
 		}
