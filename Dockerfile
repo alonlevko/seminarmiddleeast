@@ -13,4 +13,4 @@ RUN pip install --upgrade pip \
 
 COPY . /app
 
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "--env", "DJANGO_SETTINGS_MODULE=pythondjangoapp.settings.development", "pythondjangoapp.wsgi", "--timeout 0"]
+CMD exec gunicorn --env DJANGO_SETTINGS_MODULE=pythondjangoapp.settings.development pythondjangoapp.wsgi -b 0.0.0.0:8000 --timeout 0

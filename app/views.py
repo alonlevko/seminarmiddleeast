@@ -24,6 +24,7 @@ def index(request):
         form_user = NameForm(request.POST)
         if form_user.is_valid():
             name = form_user.cleaned_data['your_name']
+            name = name.replace(" ", "_")
             return HttpResponseRedirect('/tweets/' + name)
     # if a GET (or any other method) we'll create a blank form
     else:
@@ -241,7 +242,7 @@ def word_trends_get(request):
         queriesManager = QueriesManager()
         name, locations, start_date, end_date, word_list = parse_parameters(request)
         days_list = generate_days_list(start_date, end_date)
-        total_tweets = get_tweet_list(locations, get_user(name), days_list, None, asdocs=True)
+        total_tweets = get_tweet_list(locations, get_user(name), days_list, word_list=word_list, asdocs=True)
         if isinstance(total_tweets, Exception):
             return JsonResponse(str(total_tweets), safe=False, status=500)
         elif len(total_tweets) == 0:
@@ -313,7 +314,7 @@ def popularity_of_words_get(request):
         word_list, pharase_list = filter_strings(word_list)
         word_list = word_list + phrase_list_to_word_list(pharase_list)
         days_list = generate_days_list(start_date, end_date)
-        total_tweets = get_tweet_list(locations, get_user(name), days_list, None, asdocs=True)
+        total_tweets = get_tweet_list(locations, get_user(name), days_list, word_list=word_list, asdocs=True)
         if isinstance(total_tweets, Exception):
             return JsonResponse(str(total_tweets), safe=False, status=500)
         elif len(total_tweets) == 0:
@@ -368,7 +369,7 @@ def first_time_get(request):
         queriesManager = QueriesManager()
         name, locations, start_date, end_date, word_list = parse_parameters(request)
         max_results = request.POST.get('max_results', None)
-        total_users, total_tweets = generate_users_tweets(request, use_words=False, tasdocs=True, uasdocs=True)
+        total_users, total_tweets = generate_users_tweets(request, use_words=True, tasdocs=True, uasdocs=True)
         if isinstance(total_users, Exception):
             return JsonResponse(str(total_users), safe=False, status=500)
         elif len(total_tweets) == 0:
@@ -402,7 +403,7 @@ def most_retweeted_get(request):
         queriesManager = QueriesManager()
         name, locations, start_date, end_date, word_list = parse_parameters(request)
         max_results = request.POST.get('max_results', None)
-        total_users, total_tweets = generate_users_tweets(request, use_words=False, tasdocs=True, uasdocs=True)
+        total_users, total_tweets = generate_users_tweets(request, use_words=True, tasdocs=True, uasdocs=True)
         if isinstance(total_users, Exception):
             return JsonResponse(str(total_users), safe=False, status=500)
         elif len(total_tweets) == 0:

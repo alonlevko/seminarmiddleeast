@@ -219,25 +219,12 @@ class Place:
         else:
             self.tweets = len(tweets)
         if users is None:
-            self.users = []
+            self.users = 0
         else:
             self.users = len(users)
 
     def add_user(self, tuser):
         self.users += 1
-        return
-        stuserid = str(tuser.id)
-        if stuserid not in self.users:
-            self.users.append(stuserid)
-            #self.save_user_to_db(tuser)
-
-    def convert_user_as_num_to_string(self):
-        return
-        string_ids = []
-        for userid in self.users:
-            string_ids.append(str(userid))
-        self.users = []
-        self.users = self.users + string_ids
 
     def get_tweet_number(self):
         return self.tweets
@@ -246,30 +233,13 @@ class Place:
         return self.users
 
     def add_tweet(self, tweet):
-        #stid = str(tweet.id)
-        #if stid in self.tweets:
-        #    return
-
         tweet_time = parse(tweet.created_at)
         if tweet_time > self.last_tweet_date:
             self.last_tweet_date = tweet_time
 
-        #self.tweets.append(stid)
         self.tweets += 1
         if tweet.id > self.max_id:
             self.max_id = tweet.id
-
-    # don't use, we don't need anymore
-    def calculate_last_tweet_date(self):
-        all_tweets_obj = self.get_tweets(0, len(self.tweets))
-        for t in all_tweets_obj:
-            if isinstance(t, Tweet):
-                t = twitter.Status().NewFromJsonDict(t)
-            tweet_time = parse(t.created_at)
-            tweet_time_utcoffset = getattr(tweet_time, "utcoffset", None)
-            self_last_tweet_date_utcoffset = getattr(self.last_tweet_date, "utcoffset", None)
-            if tweet_time.date() > self.last_tweet_date.date():
-                self.last_tweet_date = tweet_time
 
     def config_last_tweet_date(self):
         date = 'Fri May 10 00:44:04 +0000 2019'
@@ -278,7 +248,6 @@ class Place:
     def add_tweet_list(self, tweet_list, user, region, old_user=False):
         print("in add_tweet_list tweet list len:" + str(len(tweet_list)))
         user_list = []
-        tweet_list = self.remove_tweets_already_in(tweet_list)
         for t in tweet_list:
             self.add_tweet(t)
             user_list.append(t.user)
@@ -291,27 +260,10 @@ class Place:
     def add_user_list(self, users_list, user, region):
         print("add_user_list")
         users_list = remove_duplicate_users(users_list)
-        users_list = self.remove_users_already_in(users_list)
         exten = generate_extensions(users_list,  user, region, self, UserExtension)
         save_list_to_db(exten, twitter_users_database_name, UserExtension)
         for u in users_list:
             self.add_user(u)
-
-    def remove_users_already_in(self, users_list):
-        return
-        result_list = []
-        for user in users_list:
-            if str(user.id) not in self.users:
-                result_list.append(user)
-        return result_list
-
-    def remove_tweets_already_in(self, tweet_list):
-        return
-        result_list = []
-        for tweet in tweet_list:
-            if str(tweet.id) not in self.tweets:
-                result_list.append(tweet)
-        return result_list
 
     def get_name(self):
         return self.name
@@ -619,7 +571,7 @@ class UserExtension(ExtensionInterface):
         print("in get_standart_all_tweets, got results:" + str(len(results)) + "from user: " + self.twitter_user.screen_name)
         for tweet in results:
             tweet_list.append(tweet)
-        self.place.add_tweet_list(tweet_list, self.user, self.region, old_user=False)
+        self.place.add_tweet_list(tweet_list, self.user, self.region, old_user=True)
         return tweet_list
 
     def calculate_extensions(self):
@@ -832,6 +784,7 @@ def get_total_quote_number(tweet_list):
         if hasattr(tweet, 'quote_count'):
             quote_count += tweet.quote_count
     return quote_count
+
 
 def remove_duplicate_users(user_list):
     result_dict = {}

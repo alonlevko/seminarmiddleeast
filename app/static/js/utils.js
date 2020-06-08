@@ -1,5 +1,8 @@
 function error(res) {
-    if (res.responseText.includes("Error:")){
+    if (res.responseText == undefined) {
+        alert("Error: Empty result. Please re-select search parameters.");
+    }
+    else if (res.responseText.includes("Error:")) {
         alert(res.responseText);
     } else {
         alert("general error, got status:" + res.status + "; containing: " + res.responseText + ". Please try again later");
