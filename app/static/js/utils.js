@@ -39,6 +39,8 @@ function ajaxCall(url, tableId, onSuccess, onFailure, maxid, datedNeeded=false, 
 	if (maxid != undefined) {
 	    max = document.getElementById(maxid).value;
 	}
+	var word_logic = getWordLogic();
+	var exact_word = getExactWordValue();
 	$.ajax({
 		url: window.location.origin + url,
 		data: {
@@ -48,7 +50,9 @@ function ajaxCall(url, tableId, onSuccess, onFailure, maxid, datedNeeded=false, 
 			'end_date': endDate,
 			'words_list': JSON.stringify(word_list),
 			'sliders_data': JSON.stringify(sliders_data),
-			'max_results': max
+			'max_results': max,
+			'word_logic': word_logic,
+			'exact_word': exact_word
 		},
 		dataType: 'json',
 		method: 'post',

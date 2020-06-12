@@ -312,11 +312,11 @@ def convert_to_iso(full_date):
                    hour=int(full_date[8:10]), minute=int(full_date[10:12]), second=int(full_date[12:14]))
     return dat.isoformat()
 
-def get_tweet_list(locations, user, days_list, word_list, asdocs=None):
+def get_tweet_list(locations, user, days_list, word_list, asdocs=None, logic='or_logic', exact=False):
     tweets = []
     for loc in locations:
         place = user.get_region(loc['region']).get_place_by_name(loc['place'])
-        mylist = place.get_tweets_directly(user.get_name(), loc['region'], days_list, word_list, asdocs)
+        mylist = place.get_tweets_directly(user.get_name(), loc['region'], days_list, word_list, asdocs, logic, exact)
         if isinstance(mylist, Exception):
             return mylist
         # print(mylist)
@@ -367,13 +367,20 @@ def parse_parameters(request):
     word_list = request.POST.get('words_list', None)
     if word_list is not None:
         word_list = jsonpickle.decode(word_list)
-
-    return name, locations, start_date, end_date, word_list
+    logic = request.POST.get('word_logic', None)
+    exact = request.POST.get('exact_word', None)
+    if exact is not None:
+        if exact == 'True':
+            exact = True
+        elif exact == 'False':
+            exact = False
+    print("parse parameters exact:" + str(exact))
+    return name, locations, start_date, end_date, word_list, logic, exact
 
 def generate_users_tweets(request, use_words=True, tasdocs=False, uasdocs=False):
     twitter_users = []
     total_tweets = []
-    name, locations, start_date, end_date, word_list = parse_parameters(request)
+    name, locations, start_date, end_date, word_list, logic, exact = parse_parameters(request)
     print(start_date)
     print(end_date)
     days_list = None
@@ -384,10 +391,11 @@ def generate_users_tweets(request, use_words=True, tasdocs=False, uasdocs=False)
     if word_list is not None:
         flag = True
     if flag:
+        print("getting with flag on")
         if use_words:
-            total_tweets = get_tweet_list(locations, get_user(name), days_list, word_list, tasdocs)
+            total_tweets = get_tweet_list(locations, get_user(name), days_list, word_list, tasdocs, logic, exact)
         else:
-            total_tweets = get_tweet_list(locations, get_user(name), days_list, None, tasdocs)
+            total_tweets = get_tweet_list(locations, get_user(name), days_list, None, tasdocs, logic)
         if isinstance(total_tweets, Exception):
             return total_tweets, []
         userids = get_all_twitter_users_ids(total_tweets, tasdocs)
@@ -399,6 +407,7 @@ def generate_users_tweets(request, use_words=True, tasdocs=False, uasdocs=False)
             twitter_users = get_from_db(userids, twitter_users_database_name, UserExtension)
         print(len(twitter_users))
     else:
+        print("getting with flag off")
         for loc in locations:
             place = get_user(name).get_region(loc['region']).get_place_by_name(loc['place'])
             if uasdocs:

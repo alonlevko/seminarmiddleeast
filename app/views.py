@@ -102,7 +102,7 @@ def get_search_words(request):
 @csrf_exempt
 def accumulate_tweets(request):
     if request.method == 'POST':
-        name, locations, start_date, end_date, word_list = parse_parameters(request)
+        name, locations, start_date, end_date, word_list, logic, exact = parse_parameters(request)
         user = get_user(name)
         for loc in locations:
             init_tweet_accumulation_tweet_list(user, loc['region'], loc['place'], word_list)
@@ -183,8 +183,9 @@ def popular_users_get(request):
 def tweet_list_place(request):
     print("tweet_list_place")
     if request.method == 'POST':
-        name, locations, start_date, end_date, word_list = parse_parameters(request)
+        name, locations, start_date, end_date, word_list, logic, exact = parse_parameters(request)
         print("word list is: " + str(word_list))
+        print("logic is: " + logic)
         if start_date is not "" and end_date is not "":
             days_list = generate_days_list(start_date, end_date)
         else:
@@ -193,7 +194,7 @@ def tweet_list_place(request):
         total_tweets = []
         for loc in locations:
             place = get_user(name).get_region(loc['region']).get_place_by_name(loc['place'])
-            mylist = place.get_tweets_directly(name, loc['region'], days_list, word_list)
+            mylist = place.get_tweets_directly(name, loc['region'], days_list, word_list, logic=logic, exact=exact)
             if isinstance(mylist, Exception):
                 return JsonResponse(str(mylist), safe=False, status=500)
             #print(mylist)
@@ -240,14 +241,18 @@ def word_trends_get(request):
     total_result = []
     if request.method == 'POST':
         queriesManager = QueriesManager()
-        name, locations, start_date, end_date, word_list = parse_parameters(request)
+        name, locations, start_date, end_date, word_list, logic, exact = parse_parameters(request)
         days_list = generate_days_list(start_date, end_date)
-        total_tweets = get_tweet_list(locations, get_user(name), days_list, word_list=word_list, asdocs=True)
+        total_tweets = get_tweet_list(locations, get_user(name), days_list, word_list=word_list, asdocs=True, exact=exact)
         if isinstance(total_tweets, Exception):
             return JsonResponse(str(total_tweets), safe=False, status=500)
         elif len(total_tweets) == 0:
             return JsonResponse("Error: No Tweets in location and date", safe=False, status=500)
         word_list, pharses_list = filter_strings(word_list)
+        if not exact:
+            for word in word_list:
+                pharses_list.append(word)
+            word_list = []
         params = ["Word_trend", word_list]
         print(params)
         print(len(total_tweets))
@@ -274,7 +279,7 @@ def top_words_per_date_get(request):
     days_list = []
     if request.method == 'POST':
         queriesManager = QueriesManager()
-        name, locations, start_date, end_date, _ = parse_parameters(request)
+        name, locations, start_date, end_date, words_list, logic, exact = parse_parameters(request)
         days_list = generate_days_list(start_date, end_date)
         dates_counter = dict.fromkeys(days_list)
         print(days_list)
@@ -310,11 +315,11 @@ def popularity_of_words_get(request):
     df = ""
     if request.method == 'POST':
         queriesManager = QueriesManager()
-        name, locations, start_date, end_date, word_list = parse_parameters(request)
+        name, locations, start_date, end_date, word_list, logic, exact = parse_parameters(request)
         word_list, pharase_list = filter_strings(word_list)
         word_list = word_list + phrase_list_to_word_list(pharase_list)
         days_list = generate_days_list(start_date, end_date)
-        total_tweets = get_tweet_list(locations, get_user(name), days_list, word_list=word_list, asdocs=True)
+        total_tweets = get_tweet_list(locations, get_user(name), days_list, word_list=word_list, asdocs=True, exact=exact)
         if isinstance(total_tweets, Exception):
             return JsonResponse(str(total_tweets), safe=False, status=500)
         elif len(total_tweets) == 0:
@@ -344,7 +349,7 @@ def most_popular_word_get(request):
     counter_list = []
     if request.method == 'POST':
         queriesManager = QueriesManager()
-        name, locations, start_date, end_date, _ = parse_parameters(request)
+        name, locations, start_date, end_date, word_list, logic, exact = parse_parameters(request)
         days_list = generate_days_list(start_date, end_date)
         total_tweets = get_tweet_list(locations, get_user(name), days_list, None, asdocs=True)
         if isinstance(total_tweets, Exception):
@@ -367,7 +372,7 @@ def first_time_get(request):
     df_list = []
     if request.method == 'POST':
         queriesManager = QueriesManager()
-        name, locations, start_date, end_date, word_list = parse_parameters(request)
+        name, locations, start_date, end_date, word_list, logic, exact = parse_parameters(request)
         max_results = request.POST.get('max_results', None)
         total_users, total_tweets = generate_users_tweets(request, use_words=True, tasdocs=True, uasdocs=True)
         if isinstance(total_users, Exception):
@@ -376,9 +381,11 @@ def first_time_get(request):
             return JsonResponse("Error: No Tweets in location and date", safe=False, status=500)
         print(len(total_tweets))
         print(len(total_users))
-
         for word in word_list:
-            params = ["First_Time", [word], [max_results]]
+            if exact:
+                params = ["First_Time", [" " + word + " "], [max_results]]
+            else:
+                params = ["First_Time", [word], [max_results]]
             print(params)
             df = queriesManager.call_querie(params, total_tweets, total_users)
             print(df)
@@ -401,7 +408,7 @@ def most_retweeted_get(request):
     row_data = []
     if request.method == 'POST':
         queriesManager = QueriesManager()
-        name, locations, start_date, end_date, word_list = parse_parameters(request)
+        name, locations, start_date, end_date, word_list, logic, exact = parse_parameters(request)
         max_results = request.POST.get('max_results', None)
         total_users, total_tweets = generate_users_tweets(request, use_words=True, tasdocs=True, uasdocs=True)
         if isinstance(total_users, Exception):
@@ -411,7 +418,10 @@ def most_retweeted_get(request):
         print(len(total_tweets))
         print(len(total_users))
         for word in word_list:
-            params = ["Most_Retweeted", [word], [max_results]]
+            if exact:
+                params = ["Most_Retweeted", [" " + word + " "], [max_results]]
+            else:
+                params = ["Most_Retweeted", [word], [max_results]]
             print(params)
             df = queriesManager.call_querie(params, total_tweets, total_users)
             print(df)

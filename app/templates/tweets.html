@@ -72,7 +72,6 @@
         </div>
     </div>
     <div align="center" id="AIcharts"></div>
-    <div style="text-align:center;" id="results"></div>
     <div id="tweets_table">
     <table id="ttable" class="table table-striped" data-toggle="table"
                data-show-columns="true" data-show-export="true" data-search="true" data-advanced-search="true"
@@ -189,8 +188,16 @@
     <dialog id="add_word_dialog" class="dialog" style="text-align:center">
         <input type="text" id="word" name="word" placeholder="search phrase">
         <input type="submit" class="button" value="Add" id="add_word" onclick="addWord()"><br>
+        <label  for="word_logic">Select word Search Logic:</label>
+        <select class="button" id="word_logic">
+            <option value="or_logic">OR search logic</option>
+            <option value="and_logic">AND search logic</option>
+        </select><br>
+        <input type="checkbox" id="exact_word">
+        <label for="exact_word">Search With Exact word</label><br>
         <button class="button" id="remove_words" onclick="removeSelectedWords()" >Remove Selected Phrases</button>
     </dialog>
+    <div style="text-align:center;" id="results"></div>
 </body>
 <script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/tweets.js' %}"></script>

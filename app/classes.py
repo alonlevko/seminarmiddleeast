@@ -301,10 +301,11 @@ class Place:
         print("get tweets, start: " + str(start) + " end: " + str(end) + " len: " + str(len(self.tweets)))
         return get_from_db(self.tweets[start: end], tweet_database_name, TweetExtension)
 
-    def get_tweets_directly(self, user_name, region_name, dates=None, word_list=None, asdocs=None):
+    def get_tweets_directly(self, user_name, region_name, dates=None, word_list=None, asdocs=None, logic="or_logic", exact=False):
         print("get_tweets_directly")
+        print("get_tweets_directly logic is: " + logic)
         return get_from_db_by_params(user_name, region_name, self.name, new_tweet_database_name, TweetExtension,
-                                     dates=dates, word_list=word_list, asdocs=asdocs)
+                                     dates=dates, word_list=word_list, asdocs=asdocs, logic=logic, exact=exact)
 
     def get_users_directly(self, user_name, region_name, asdocs=False):
         print("get_users_directly")
@@ -611,9 +612,25 @@ class UserExtension(ExtensionInterface):
 
     @staticmethod
     def build_from_document(doc):
+        if 'total_retweet_count' in doc:
+            total_retweets = doc['total_retweet_count']
+        else:
+            total_retweets = "0"
+        if 'total_favorite_count' in doc:
+            total_favorite = doc['total_favorite_count']
+        else:
+            total_favorite = "0"
+        if 'total_replies_count' in doc:
+            total_replies = doc['total_replies_count']
+        else:
+            total_replies = "0"
+        if 'total_quoted_count' in doc:
+            total_quoted = doc['total_quoted_count']
+        else:
+            total_quoted = "0"
         return UserExtension(jsonpickle.decode(str(doc['value'])), str(doc['user_name']), str(doc['region_name']),
-                         str(doc['place_name']), doc['total_retweet_count'], doc['total_favorite_count'],
-                             doc['total_replies_count'], doc['total_quoted_count'])
+                         str(doc['place_name']), total_retweets, total_favorite,
+                             total_replies, total_quoted)
 
     def get_view_sendaway(self):
         name = "0"
@@ -655,11 +672,11 @@ def get_from_db(id_list, db_name, object_example=None):
                     index =+ 1
             print("query_result len: " + str(index))
         except CloudantException as exc:
-            print("CloudantException in save_list_to_db")
+            print("CloudantException in get_from_db")
             print(exc)
             result_list = []
         except Exception as exc:
-            print("non CloudantException exception in save_list_to_db")
+            print("non CloudantException exception in get_from_db")
             print(exc)
             result_list = []
         finally:
@@ -703,23 +720,32 @@ def save_list_to_db(inlist, db_name, object_example=None):
     finally:
         client_save_to_db.disconnect()
 
-def generate_text_selector(word_list):
+def generate_text_selector(word_list, exact=False):
     sel_list = []
+    if exact:
+        new_word_list = []
+        for word in word_list:
+            new_word_list.append(" " + word + " ")
+        word_list = new_word_list
     for word in word_list:
         sel_list.append({"tdata": {"$regex": word}})
     #return {'$or': sel_list}
     return sel_list
 
-def generate_single_place_selector(user_name, region_name, place_name, dates, word_list):
+def generate_single_place_selector(user_name, region_name, place_name, dates, word_list, logic='or_logic', exact=False):
+    print("generate_single_place_selector logic is:" + logic)
     selector = {'user_name': {'$eq': user_name}, 'region_name': {'$eq': region_name}, 'place_name': {'$eq': place_name}}
     if dates is not None:
         selector['date'] = {'$in': dates}
     if word_list is not None:
-        selector['$or'] = generate_text_selector(word_list)
+        if logic == 'or_logic':
+            selector['$or'] = generate_text_selector(word_list, exact)
+        elif logic == 'and_logic':
+            selector['$and'] = generate_text_selector(word_list, exact)
     return selector
 
 
-def get_from_db_by_params(user_name, region_name, place_name, db_name, object_example, asdocs=False, dates=None, word_list=None):
+def get_from_db_by_params(user_name, region_name, place_name, db_name, object_example, asdocs=False, dates=None, word_list=None, logic='or_logic', exact=False):
     print("get_from_db_by_params")
     print(user_name + ";" + region_name + ";" + place_name + ";" + db_name + ";" + str(type(object_example)) + ";" +
                                                                                        str(asdocs))
@@ -728,7 +754,8 @@ def get_from_db_by_params(user_name, region_name, place_name, db_name, object_ex
         our_list = []
         get_db_client.connect()
         db = get_db_client.get(db_name, remote=True)
-        selector = generate_single_place_selector(user_name, region_name, place_name, dates, word_list)
+        print("get_from_db_by_params logic is:" + logic)
+        selector = generate_single_place_selector(user_name, region_name, place_name, dates, word_list, logic, exact)
         print("the selector is: " + str(selector))
         query_result = QueryResult(Query(db, selector=selector))
         if asdocs is True:

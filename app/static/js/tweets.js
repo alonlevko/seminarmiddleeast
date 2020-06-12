@@ -198,6 +198,7 @@ function parseUserSendaway(t) {
 function showUsers() {
     ajaxCall("/users-get", "users_table", function (res, status) {
 		var data = [];
+		$("#utable").bootstrapTable('removeAll');
 		res.forEach(function (t) {
 			data.push(parseUserSendaway(t));
 		});
@@ -292,6 +293,18 @@ function runAnalysis() {
             case "prompt":
             default:
                 break;
+    }
+}
+
+function getWordLogic() {
+    return document.getElementById("word_logic").value;
+}
+
+function getExactWordValue() {
+    if (document.getElementById("exact_word").checked) {
+        return "True";
+    } else {
+        return "False";
     }
 }
 	
